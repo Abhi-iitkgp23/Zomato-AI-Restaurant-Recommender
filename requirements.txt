@@ -1,0 +1,2 @@
+# Editable install with API + test extras (Python 3.11+)
+-e ".[dev,api]"
