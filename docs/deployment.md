@@ -303,6 +303,7 @@ Use this only if you prefer the browser to hit Railway directly (for example, to
 | Browser console shows CORS errors | Using direct mode (section 6) without CORS | Add `CORSMiddleware` with your Vercel origin, or switch back to rewrites |
 | Build fails on Python version | Python < 3.11 selected | Ensure `.python-version` contains `3.12` |
 | Slow first request after idle | Service woke from sleep / cold start | Expected on free tiers; keep the service always-on if needed |
+| Pushes don't redeploy Railway; no Railway tick on GitHub commits; repo missing from Railway's repo picker | Railway GitHub App lacks access to the repo | [github.com/settings/installations](https://github.com/settings/installations) → Railway → Configure → grant the repo → Save. Only commits pushed afterwards get a Railway status |
 
 ---
 
