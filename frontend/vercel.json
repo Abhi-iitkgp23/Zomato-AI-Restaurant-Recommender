@@ -1,0 +1,19 @@
+{
+  "rewrites": [
+    { "source": "/health", "destination": "https://YOUR-APP.up.railway.app/health" },
+    { "source": "/meta", "destination": "https://YOUR-APP.up.railway.app/meta" },
+    { "source": "/meta/:path*", "destination": "https://YOUR-APP.up.railway.app/meta/:path*" },
+    { "source": "/recommend", "destination": "https://YOUR-APP.up.railway.app/recommend" },
+    { "source": "/docs", "destination": "https://YOUR-APP.up.railway.app/docs" },
+    { "source": "/openapi.json", "destination": "https://YOUR-APP.up.railway.app/openapi.json" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ]
+}

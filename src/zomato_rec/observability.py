@@ -17,6 +17,14 @@ def preference_hash(preferences: Preferences) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
 
 
+def _budget_label(preferences: Preferences) -> str:
+    if preferences.has_budget_range:
+        low = f"{preferences.budget_min:.0f}" if preferences.budget_min is not None else "0"
+        high = f"{preferences.budget_max:.0f}" if preferences.budget_max is not None else "max"
+        return f"{low}-{high}"
+    return preferences.budget or "-"
+
+
 def log_recommend_event(
     *,
     preferences: Preferences,
@@ -34,7 +42,7 @@ def log_recommend_event(
         preference_hash(preferences),
         preferences.location or "-",
         preferences.cuisine or "-",
-        preferences.budget or "-",
+        _budget_label(preferences),
         candidate_count,
         empty,
         parse_ok,

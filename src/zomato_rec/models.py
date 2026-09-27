@@ -16,6 +16,8 @@ class Preferences(BaseModel):
 
     location: str | None = None
     budget: BudgetBand | None = None
+    budget_min: float | None = Field(default=None, ge=0.0)
+    budget_max: float | None = Field(default=None, ge=0.0)
     cuisine: str | None = None
     min_rating: float | None = Field(default=None, ge=0.0, le=5.0)
     additional_preferences: str | None = None
@@ -45,7 +47,21 @@ class Preferences(BaseModel):
     def require_location_or_cuisine(self) -> Preferences:
         if not self.location and not self.cuisine:
             raise ValueError("At least one of location or cuisine is required")
+        if (
+            self.budget_min is not None
+            and self.budget_max is not None
+            and self.budget_min > self.budget_max
+        ):
+            raise ValueError("Minimum budget can't be higher than maximum budget")
         return self
+
+    @property
+    def has_budget_range(self) -> bool:
+        return self.budget_min is not None or self.budget_max is not None
+
+    @property
+    def has_budget(self) -> bool:
+        return self.has_budget_range or self.budget is not None
 
 
 class RestaurantCandidate(BaseModel):

@@ -77,6 +77,43 @@ def test_meta_cuisines(api_client):
     assert "italian" in res.json()["cuisines"]
 
 
+def test_meta_includes_budget_thresholds(api_client):
+    res = api_client.get("/meta")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["budget_low_max"] < body["budget_med_max"]
+
+
+def test_frontend_served_at_root(api_client):
+    res = api_client.get("/")
+    assert res.status_code == 200
+    assert "text/html" in res.headers["content-type"]
+    assert "Crave" in res.text
+    assert api_client.get("/js/main.js").status_code == 200
+
+
+def test_api_routes_take_precedence_over_frontend(api_client):
+    res = api_client.get("/health")
+    assert res.headers["content-type"].startswith("application/json")
+
+
+def test_recommend_with_budget_range(api_client):
+    res = api_client.post(
+        "/recommend",
+        json={"location": "Banashankari", "budget_min": 500, "budget_max": 800, "use_llm": False},
+    )
+    assert res.status_code == 200
+    assert res.json()["recommendations"][0]["cost_for_two"] == 650
+
+
+def test_recommend_budget_range_inverted_is_422(api_client):
+    res = api_client.post(
+        "/recommend",
+        json={"location": "Banashankari", "budget_min": 900, "budget_max": 500},
+    )
+    assert res.status_code == 422
+
+
 def test_recommend_validation_error(api_client):
     res = api_client.post("/recommend", json={"budget": "medium"})
     assert res.status_code == 422

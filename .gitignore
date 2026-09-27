@@ -26,6 +26,12 @@ data/raw/**
 !data/raw/.gitkeep
 data/processed/**
 !data/processed/.gitkeep
+# Small processed cache is committed so Railway deploys have data without a HF download
+!data/processed/restaurants.parquet
+!data/processed/metadata.json
+
+# Design export archive (unzipped copy lives in stitch_ui/)
+stitch_ui/*.zip
 
 # Eval run outputs
 evals/results/

@@ -41,9 +41,15 @@ def _preferences_payload(preferences: Preferences) -> dict:
     additional = preferences.additional_preferences or ""
     if len(additional) > MAX_ADDITIONAL_PREFERENCES_LEN:
         additional = additional[:MAX_ADDITIONAL_PREFERENCES_LEN]
+    budget: object = preferences.budget
+    if preferences.has_budget_range:
+        budget = {
+            "cost_for_two_min_inr": preferences.budget_min,
+            "cost_for_two_max_inr": preferences.budget_max,
+        }
     return {
         "location": preferences.location,
-        "budget": preferences.budget,
+        "budget": budget,
         "cuisine": preferences.cuisine,
         "min_rating": preferences.min_rating,
         "additional_preferences": additional or None,

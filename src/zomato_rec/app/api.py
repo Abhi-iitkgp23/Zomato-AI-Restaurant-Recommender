@@ -5,9 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, ValidationError
 
-from zomato_rec.config import get_settings
+from zomato_rec.config import PROJECT_ROOT, get_settings
 from zomato_rec.data.repository import (
     DataNotPreparedError,
     list_cuisines,
@@ -19,6 +20,8 @@ from zomato_rec.models import Preferences, RecommendationResponse
 from zomato_rec.safety import sanitize_text
 from zomato_rec.services.recommend import recommend
 
+FRONTEND_DIR = PROJECT_ROOT / "frontend"
+
 app = FastAPI(
     title="Zomato Restaurant Recommender API",
     version="0.1.0",
@@ -29,6 +32,8 @@ app = FastAPI(
 class RecommendRequest(BaseModel):
     location: str | None = None
     budget: str | None = None
+    budget_min: float | None = Field(default=None, ge=0.0)
+    budget_max: float | None = Field(default=None, ge=0.0)
     cuisine: str | None = None
     min_rating: float | None = Field(default=None, ge=0.0, le=5.0)
     additional_preferences: str | None = None
@@ -85,12 +90,15 @@ def meta_cuisines() -> dict[str, Any]:
 def meta_summary() -> dict[str, Any]:
     try:
         meta = load_metadata()
+        settings = get_settings(validate=False)
         return {
             "row_count": meta.get("row_count"),
             "schema_version": meta.get("schema_version"),
             "location_count": len(meta.get("locations", [])),
             "cuisine_count": len(meta.get("cuisines", [])),
             "budget_band_counts": meta.get("budget_band_counts", {}),
+            "budget_low_max": meta.get("budget_low_max", settings.budget_low_max),
+            "budget_med_max": meta.get("budget_med_max", settings.budget_med_max),
         }
     except DataNotPreparedError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
@@ -102,6 +110,8 @@ def post_recommend(body: RecommendRequest) -> dict[str, Any]:
         preferences = Preferences(
             location=body.location,
             budget=body.budget,  # type: ignore[arg-type]
+            budget_min=body.budget_min,
+            budget_max=body.budget_max,
             cuisine=body.cuisine,
             min_rating=body.min_rating,
             additional_preferences=body.additional_preferences,
@@ -131,3 +141,8 @@ def post_recommend(body: RecommendRequest) -> dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"Recommend failed: {exc}") from exc
 
     return _safe_response(result)
+
+
+# Mounted last so API routes above take precedence over the static catch-all.
+if FRONTEND_DIR.is_dir():
+    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

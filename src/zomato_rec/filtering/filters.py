@@ -61,7 +61,16 @@ def _apply_hard_filters(
     if preferences.cuisine:
         out = out[_contains_ci(out["cuisines"], preferences.cuisine.lower())]
 
-    if apply_budget and preferences.budget:
+    if apply_budget and preferences.has_budget_range:
+        # An explicit range takes precedence over the budget band.
+        cost = pd.to_numeric(out["cost_for_two"], errors="coerce")
+        mask = cost.notna()
+        if preferences.budget_min is not None:
+            mask &= cost >= preferences.budget_min
+        if preferences.budget_max is not None:
+            mask &= cost <= preferences.budget_max
+        out = out[mask]
+    elif apply_budget and preferences.budget:
         out = out[out["budget_band"] == preferences.budget]
 
     if apply_rating and preferences.min_rating is not None:
@@ -154,7 +163,7 @@ def select_candidates(
         frame, preferences, apply_budget=apply_budget, apply_rating=apply_rating
     )
 
-    if filtered.empty and preferences.budget:
+    if filtered.empty and preferences.has_budget:
         apply_budget = False
         relaxed_budget = True
         notices.append("Relaxed budget filter to find matches.")

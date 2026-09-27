@@ -52,6 +52,17 @@ python scripts/recommend_cli.py \
 python scripts/recommend_cli.py --location Koramangala --cuisine Chinese --no-llm
 ```
 
+## Crave web UI (recommended)
+
+A dark, component-based frontend built from the Google Stitch designs in `stitch_ui/`. It's plain HTML and ES modules with Tailwind from a CDN, so there's no Node or build step. FastAPI serves it:
+
+```bash
+python scripts/run_api.py
+# open http://127.0.0.1:8000/
+```
+
+Code lives in `frontend/`: `js/components/` holds the UI pieces (combobox, budget toggle, rating slider, restaurant card, banners), `js/api.js` wraps the endpoints, and `js/tailwind-config.js` holds the design tokens.
+
 ## Streamlit UI (Groq)
 
 ```bash
@@ -68,7 +79,7 @@ LLM_MODEL=openai/gpt-oss-120b
 
 Without a key, the UI still returns popularity-based rankings with a clear notice.
 
-## FastAPI (optional)
+## FastAPI
 
 ```bash
 python scripts/run_api.py
@@ -77,7 +88,9 @@ python scripts/run_api.py
 
 | Endpoint | Description |
 | --- | --- |
+| `GET /` | Crave web UI (static files from `frontend/`) |
 | `GET /health` | Data + provider status |
+| `GET /meta` | Row/location/cuisine counts + budget thresholds |
 | `GET /meta/locations` | Location dropdown values |
 | `GET /meta/cuisines` | Cuisine vocabulary |
 | `POST /recommend` | Preferences JSON → ranked recommendations |
@@ -123,6 +136,10 @@ curl -s -X POST http://127.0.0.1:8000/recommend \
 | Import / package errors | Re-run `pip install -r requirements.txt` inside the 3.11+ venv |
 | Empty results | Loosen budget or min rating; try a broader location/cuisine |
 
+## Deployment
+
+Backend on Railway and the Crave frontend on Vercel: see [`docs/deployment.md`](docs/deployment.md).
+
 ## Demo checklist
 
 See [`docs/demo-smoke-checklist.md`](docs/demo-smoke-checklist.md).
@@ -131,6 +148,7 @@ See [`docs/demo-smoke-checklist.md`](docs/demo-smoke-checklist.md).
 
 ```text
 src/zomato_rec/     # package (data, filtering, llm, services, app)
+frontend/           # Crave web UI (served by FastAPI at /)
 data/processed/     # Parquet cache (generated, gitignored)
 scripts/            # prepare_dataset, recommend_cli, run_api
 tests/              # pytest

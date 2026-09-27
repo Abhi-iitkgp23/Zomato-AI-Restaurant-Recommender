@@ -179,3 +179,34 @@ def test_null_ratings_do_not_crash_sort():
 def test_preferences_require_location_or_cuisine():
     with pytest.raises(ValueError, match="location or cuisine"):
         Preferences(budget="medium", min_rating=4.0)
+
+
+def test_budget_range_filters_cost_for_two():
+    prefs = Preferences(location="Banashankari", cuisine="Italian", budget_min=500, budget_max=700)
+    result = select_candidates(_frame(), prefs, candidate_k=15)
+    assert {c.id for c in result.candidates} == {1, 4}
+    assert result.meta.relaxed_budget is False
+
+
+def test_budget_range_open_ended_max():
+    prefs = Preferences(location="Banashankari", budget_min=550)
+    result = select_candidates(_frame(), prefs, candidate_k=15)
+    assert {c.id for c in result.candidates} == {1, 4}
+
+
+def test_budget_range_overrides_band():
+    prefs = Preferences(location="Banashankari", budget="medium", budget_max=350)
+    result = select_candidates(_frame(), prefs, candidate_k=15)
+    assert [c.id for c in result.candidates] == [2]
+
+
+def test_budget_range_relaxes_when_empty():
+    prefs = Preferences(location="Banashankari", cuisine="Italian", budget_min=2000)
+    result = select_candidates(_frame(), prefs, candidate_k=15)
+    assert result.meta.relaxed_budget is True
+    assert result.candidates
+
+
+def test_budget_range_min_above_max_rejected():
+    with pytest.raises(ValueError, match="Minimum budget"):
+        Preferences(location="Banashankari", budget_min=900, budget_max=500)
